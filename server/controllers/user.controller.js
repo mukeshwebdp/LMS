@@ -80,7 +80,21 @@ const login = async (req, res) => {
         return next(new AppError(`login related err:${e.message}`,500))
   }
 };
-const logout = (req, res) => {};
-const getProfile = (req, res) => {};
+const logout = (req, res) => {
+  res.cookie('token',null,{
+    secure: true,
+    maxAge: 0,
+    httpOnly: true
+  })
+
+  res.status(200).json({
+    success: true,
+    message: 'User logged out successfully'
+  })
+};
+const getProfile = async (req, res) => {
+  const userId = req.user.id;
+  const user = await User.findById(userId);
+};
 
 export { register, login, logout, getProfile };
