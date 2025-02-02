@@ -1,6 +1,7 @@
+import fs from 'fs/promises'
 import User from "../models/user.model.js";
 import AppError from "../utils/error.util.js";
-
+import cloudinary from 'cloudinary';
 const cookieOptions = {
   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   httpOnly: true,
@@ -37,6 +38,32 @@ const register = async (req, res, next) => {
   }
 
   // TODO: File upload
+
+  if(req.file){
+    console.log(req.file)
+    try {
+      const result = await cloudinary.v2.uploader.upload(req.file.path,{
+        folder: 'lms',
+        width: 250,
+        height: 250,
+        gravity: 'faces',
+        crop:'fill'
+      });
+
+      if(result){
+        user.avatar.public_id = result.public_id;
+        user.avatar.secure_url = result.secure_url;
+
+        // Remove file from server;
+
+        fs.rm(`uploads/${req.file.filename}`)
+
+      }
+
+    } catch (e) {
+      return AppError( error || 'File not uploaded, please try again',500)
+    }
+  }
 
   await user.save();
 
@@ -93,8 +120,18 @@ const logout = (req, res) => {
   })
 };
 const getProfile = async (req, res) => {
-  const userId = req.user.id;
-  const user = await User.findById(userId);
+  try {
+    const userId = req.user.id;
+    const user = await User.findById(userId);
+
+    res.status(2001).json({
+      success: true,
+      message: 'User details',
+      user
+    })
+  } catch (e) {
+    return next(new AppError('Failed to fetch profile',500))
+  }
 };
 
 export { register, login, logout, getProfile };
