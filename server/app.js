@@ -11,7 +11,7 @@ app.use(cors({
     credentials: true
 }));
 app.use(cookieParser())
-app.use(morgan('dev '))
+app.use(morgan('dev'))
 app.use('/ping',function(req,res){
     res.send('/pong');
 })
